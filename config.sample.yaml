@@ -1,0 +1,43 @@
+# Sample Configuration File
+# Copy this file to config.yaml and fill in your actual values
+# NEVER commit config.yaml to version control - it contains sensitive data
+
+email:
+  # Email address to use for IMAP connection
+  username: "your-email@gmail.com"
+  # App-specific password (not your regular Gmail password)
+  password: "your-app-specific-password"
+  # Email subjects to filter for (only emails with these subjects will be processed)
+  allowed_subjects:
+    - "Izvod po dinarskom racunu broj"
+    - "Izvod po deviznom racunu broj"
+
+zen_money:
+  # Your Zen Money API key
+  api_key: "your-zen-money-api-key-here"
+  # Your Zen Money user ID
+  user_id: 1234567
+
+# Currency configuration mapping currencies to Zen Money accounts
+currency_config:
+  USD:
+    # Instrument ID for USD in Zen Money
+    instrument_id: 1
+    # Account UUID for USD account
+    account_id: "00000000-0000-0000-0000-000000000000"
+    # Cash account UUID for USD
+    cash_account_id: "00000000-0000-0000-0000-000000000000"
+  RSD:
+    # Instrument ID for RSD in Zen Money
+    instrument_id: 12229
+    # Account UUID for RSD account
+    account_id: "00000000-0000-0000-0000-000000000000"
+    # Cash account UUID for RSD
+    cash_account_id: "00000000-0000-0000-0000-000000000000"
+
+# Category mapping for transaction categorization
+category_config:
+  "HERMES AGENCIJA": "00000000-0000-0000-0000-000000000000"
+  "Poreska Uprava": "00000000-0000-0000-0000-000000000000"
+  "Novi Sad - Gas": "00000000-0000-0000-0000-000000000000"
+  "JKP INFORMATIKA NOVI SAD": "00000000-0000-0000-0000-000000000000"
