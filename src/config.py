@@ -16,7 +16,6 @@ class Config:
                         If None, looks for config.yaml in the project root.
         """
         if config_path is None:
-            # Look for config.yaml in the project root
             config_path = Path(__file__).parent.parent / "config.yaml"
         else:
             config_path = Path(config_path)

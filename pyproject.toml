@@ -8,7 +8,12 @@ version = "0.1.0"
 description = "Convert Raiffeisen bank statements to Zen Money"
 requires-python = ">=3.13"
 dependencies = [
+    "imapclient>=3.0.1",
+    "lxml>=6.0.2",
+    "mail-parser>=4.1.4",
+    "pydantic>=2.12.5",
     "pyyaml>=6.0",
+    "requests>=2.32.5",
 ]
 
 [project.optional-dependencies]

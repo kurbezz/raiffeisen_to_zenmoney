@@ -7,7 +7,7 @@ from services.zen_money.zen_money_api import get_state, update_state
 
 
 def main():
-    DAYS = 60
+    DAYS = 7
 
     statements = get_statements(DAYS)
     zen_money_state = get_state(DAYS)

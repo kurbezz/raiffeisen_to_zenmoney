@@ -4,7 +4,7 @@ This module maintains backward compatibility by loading configuration
 from the YAML config file using the config reader.
 """
 
-from src.config import get_config
+from config import get_config
 
 # Load configuration from YAML
 _config = get_config()
