@@ -65,6 +65,8 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
               "event": "docker_build_complete",
+              "image": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}",
+              "tags": "${{ steps.meta.outputs.tags }}",
               "repository": "${{ github.repository }}",
               "ref": "${{ github.ref }}",
               "sha": "${{ github.sha }}",
