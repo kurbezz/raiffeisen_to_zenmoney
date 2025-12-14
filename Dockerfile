@@ -50,5 +50,7 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import src.main; print('OK')" || exit 1
 
+WORKDIR /app/src
+
 # Run the application
-CMD ["python", "-m", "src.main"]
+CMD ["python", "main.py"]
