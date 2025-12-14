@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files
+# Copy all source files first
+COPY src ./src
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
@@ -41,10 +42,15 @@ COPY --chown=appuser:appuser config.sample.yaml ./config.yaml
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH="/app/src:${PYTHONPATH}" \
     PATH="/home/appuser/.local/bin:$PATH"
 
 # Switch to non-root user
 USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys; sys.path.insert(0, '/app/src'); from main import main; print('OK')" || exit 1
 
 WORKDIR /app/src
 
