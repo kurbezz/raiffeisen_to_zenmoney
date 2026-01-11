@@ -23,3 +23,9 @@ CURRENCY_CONFIG = _config.currency_config
 
 # Category configuration
 CATEGORY_CONFIG = _config.category_config
+
+# Deel configuration
+DEEL_CONFIG = _config.deel_config
+
+# Cash withdrawal configuration
+CASH_WITHDRAWAL_CONFIG = _config.cash_withdrawal_config

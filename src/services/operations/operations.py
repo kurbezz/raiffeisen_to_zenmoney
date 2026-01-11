@@ -40,3 +40,41 @@ class TransitionOperation:
             to_currency=to_operation.currency,
             date=from_operation.data,
         )
+
+
+@dataclass
+class DeelTransferOperation:
+    """Transfer operation from Deel to bank account"""
+
+    customer: str
+    amount: float
+    currency: str
+    date: str
+
+    @classmethod
+    def from_raw(cls, raw_operation: RawOperation) -> Self:
+        return cls(
+            customer=raw_operation.customer,
+            amount=raw_operation.amount,
+            currency=raw_operation.currency,
+            date=raw_operation.data,
+        )
+
+
+@dataclass
+class CashWithdrawalOperation:
+    """Cash withdrawal operation from ATM or bank branch"""
+
+    customer: str
+    amount: float
+    currency: str
+    date: str
+
+    @classmethod
+    def from_raw(cls, raw_operation: RawOperation) -> Self:
+        return cls(
+            customer=raw_operation.customer,
+            amount=raw_operation.amount,
+            currency=raw_operation.currency,
+            date=raw_operation.data,
+        )

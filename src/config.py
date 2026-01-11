@@ -90,6 +90,16 @@ class Config:
         """Get category configuration."""
         return self.get("category_config", {})
 
+    @property
+    def deel_config(self) -> Dict[str, Any]:
+        """Get Deel configuration."""
+        return self.get("deel_config", {})
+
+    @property
+    def cash_withdrawal_config(self) -> Dict[str, Any]:
+        """Get cash withdrawal configuration."""
+        return self.get("cash_withdrawal_config", {})
+
     def __getitem__(self, key: str) -> Any:
         """Allow dictionary-style access."""
         return self.get(key)

@@ -41,3 +41,25 @@ category_config:
   "Poreska Uprava": "00000000-0000-0000-0000-000000000000"
   "Novi Sad - Gas": "00000000-0000-0000-0000-000000000000"
   "JKP INFORMATIKA NOVI SAD": "00000000-0000-0000-0000-000000000000"
+
+# Deel account configuration for incoming transfers
+deel_config:
+  # Enable Deel transfer handling
+  enabled: true
+  # Keywords to identify Deel payments (case-insensitive)
+  keywords:
+    - "DEEL"
+    - "DEEL INC"
+  # Deel account ID in Zen Money (where money comes from)
+  account_id: "00000000-0000-0000-0000-000000000000"
+  # Currency of Deel account
+  currency: "USD"
+
+# Cash withdrawal configuration (ATM/bank branch withdrawals)
+cash_withdrawal_config:
+  # Enable cash withdrawal handling
+  enabled: true
+  # Keywords to identify cash withdrawals (case-insensitive search in customer/description)
+  keywords:
+    - "RAIFFEISEN BANK SRB"
+    - "ATM"

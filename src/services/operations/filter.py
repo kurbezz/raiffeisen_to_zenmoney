@@ -1,6 +1,11 @@
 from datetime import datetime
 
-from services.operations.operations import SimpleOperation, TransitionOperation
+from services.operations.operations import (
+    CashWithdrawalOperation,
+    DeelTransferOperation,
+    SimpleOperation,
+    TransitionOperation,
+)
 from services.zen_money.zen_money_api import ZenMoneyState
 
 
@@ -15,9 +20,19 @@ def _convert_date_to_iso(date_str: str) -> str:
 
 
 def filter_operations(
-    operations: list[SimpleOperation | TransitionOperation],
+    operations: list[
+        SimpleOperation
+        | TransitionOperation
+        | DeelTransferOperation
+        | CashWithdrawalOperation
+    ],
     zen_money_state: ZenMoneyState,
-) -> list[SimpleOperation | TransitionOperation]:
+) -> list[
+    SimpleOperation
+    | TransitionOperation
+    | DeelTransferOperation
+    | CashWithdrawalOperation
+]:
     raiffeizen_accounts = {}
     for account in zen_money_state.account:
         if account.title.startswith("Raiffeizen B"):
@@ -62,6 +77,8 @@ def filter_operations(
                 if transaction.comment and (
                     transaction.comment.startswith("Импорт: ")
                     or transaction.comment.startswith("Обмен валют: ")
+                    or transaction.comment.startswith("Transfer from Deel: ")
+                    or transaction.comment.startswith("Снятие наличных: ")
                 ):
                     if transaction.comment.startswith("Обмен валют: "):
                         if transaction.outcome > 0:
@@ -180,5 +197,29 @@ def filter_operations(
                 continue
 
             filtered_operations.append(operation)
+
+        elif isinstance(operation, DeelTransferOperation):
+            # Deel transfers are always incoming
+            amount = abs(operation.amount)
+            iso_date = _convert_date_to_iso(operation.date)
+            expected_comment = f"Transfer from Deel: {operation.customer}"
+
+            import_key = (iso_date, amount, operation.currency, expected_comment)
+
+            # Check that this Deel transfer hasn't been imported yet
+            if import_key not in existing_import_operations:
+                filtered_operations.append(operation)
+
+        elif isinstance(operation, CashWithdrawalOperation):
+            # Cash withdrawals are always outgoing (negative amount)
+            amount = abs(operation.amount)
+            iso_date = _convert_date_to_iso(operation.date)
+            expected_comment = f"Снятие наличных: {operation.customer}"
+
+            import_key = (iso_date, amount, operation.currency, expected_comment)
+
+            # Check that this cash withdrawal hasn't been imported yet
+            if import_key not in existing_import_operations:
+                filtered_operations.append(operation)
 
     return filtered_operations
