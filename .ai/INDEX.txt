@@ -1,0 +1,87 @@
+AI Documentation Index - Raiffeisen to ZenMoney
+==============================================
+
+Total Files: 9
+Total Size: ~121KB
+Total Lines: ~4,500
+Token Estimate: ~30,000 tokens
+
+Files Overview:
+---------------
+
+1. README.md (6.3KB)
+   - Master guide for AI agents
+   - Documentation overview
+   - Quick start for AI assistants
+   
+2. QUICKSTART.md (5.5KB) ⚡ START HERE
+   - Fast reference index
+   - Quick facts
+   - Common tasks lookup
+   
+3. NAVIGATION.md (7.8KB)
+   - Visual documentation map
+   - Reading strategies
+   - Cross-reference index
+   
+4. MAINTENANCE.md (9.2KB)
+   - Documentation maintenance guide
+   - Update checklists
+   - Quality standards
+   
+5. VERSION.md (5.9KB)
+   - Changelog
+   - Version tracking
+   - Coverage matrix
+   
+6. project-metadata.yaml (6.4KB)
+   - Structured project facts
+   - Tech stack
+   - Dependencies
+   - Module inventory
+   
+7. project-map.md (20KB)
+   - Complete architecture
+   - Module breakdown
+   - Data flow
+   - Extension points
+   
+8. codebase-context.md (30KB)
+   - Implementation details
+   - Code examples
+   - Business logic
+   - Integration details
+   
+9. development-guide.md (30KB)
+   - How-to guides
+   - Step-by-step workflows
+   - Debugging guides
+   - Testing procedures
+
+Recommended Reading Order:
+-------------------------
+
+For AI Agents (First Time):
+1. QUICKSTART.md (2 min)
+2. project-metadata.yaml (3 min)
+3. project-map.md (15 min)
+4. codebase-context.md (as needed)
+5. development-guide.md (for tasks)
+
+For Specific Tasks:
+1. QUICKSTART.md → find task
+2. development-guide.md → how-to
+3. codebase-context.md → details
+
+Quick Navigation:
+----------------
+
+Need to understand → project-map.md
+Need to implement → development-guide.md
+Need details → codebase-context.md
+Need facts → project-metadata.yaml
+Need direction → NAVIGATION.md
+Need reference → QUICKSTART.md
+
+Last Updated: 2024-01-11
+Version: 1.0.0

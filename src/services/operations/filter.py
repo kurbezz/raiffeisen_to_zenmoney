@@ -9,6 +9,18 @@ from services.operations.operations import (
 from services.zen_money.zen_money_api import ZenMoneyState
 
 
+def _normalize_payee(payee: str) -> str:
+    """Normalize payee name for comparison."""
+    if not payee:
+        return ""
+
+    # Remove "Stanje: ***" suffix
+    payee = payee.replace("Stanje: ***", "").replace("Stanje:", "").strip()
+
+    # Convert to lowercase for comparison
+    return payee.lower()
+
+
 def _convert_date_to_iso(date_str: str) -> str:
     try:
         if "." in date_str:
@@ -45,6 +57,7 @@ def filter_operations(
 
     existing_transactions = set()
     existing_import_operations = set()
+    existing_sms_transactions = set()  # For SMS duplicates (non-import comments)
 
     for transaction in zen_money_state.transaction:
         if transaction.deleted:
@@ -129,6 +142,24 @@ def filter_operations(
                             transaction.comment,
                         )
                         existing_import_operations.add(import_key)
+                else:
+                    # This is an SMS operation (no import comment)
+                    # Track with normalized payee to catch SMS duplicates
+                    amount = (
+                        transaction.outcome
+                        if transaction.outcome > 0
+                        else transaction.income
+                    )
+                    normalized_payee = (
+                        _normalize_payee(transaction.payee) if transaction.payee else ""
+                    )
+                    sms_key = (
+                        transaction.date,
+                        abs(amount),
+                        instrument.shortTitle,
+                        normalized_payee,
+                    )
+                    existing_sms_transactions.add(sms_key)
 
     filtered_operations = []
 
@@ -145,9 +176,14 @@ def filter_operations(
 
             import_key = (iso_date, amount, operation.currency, expected_comment)
 
+            # Also check for SMS duplicates (same date, amount, currency, normalized customer)
+            normalized_customer = _normalize_payee(operation.customer)
+            sms_key = (iso_date, amount, operation.currency, normalized_customer)
+
             if (
                 key not in existing_transactions
                 and import_key not in existing_import_operations
+                and sms_key not in existing_sms_transactions
             ):
                 filtered_operations.append(operation)
 

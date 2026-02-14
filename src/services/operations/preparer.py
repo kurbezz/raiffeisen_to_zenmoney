@@ -52,6 +52,7 @@ def prepare_operations(
 
     processed_operations = set()
 
+    # Link same-currency transfer operations (debit and credit with matching amounts)
     for i, (op1, acc1) in enumerate(all_raw_operations):
         if id(op1) in processed_operations:
             continue
@@ -60,8 +61,28 @@ def prepare_operations(
             if id(op2) in processed_operations:
                 continue
 
+            # Check if operations are linked and have opposite amounts and same currency
             if _are_operations_linked(op1, op2):
                 if (
+                    op1.currency == op2.currency
+                    and abs(op1.amount) == abs(op2.amount)
+                    and (
+                        (op1.amount < 0 and op2.amount > 0)
+                        or (op1.amount > 0 and op2.amount < 0)
+                    )
+                ):
+                    # These are matching debit/credit operations in the same currency
+                    # Treat as a transfer (no need to convert to TransitionOperation since same currency)
+                    # Mark both as processed, but only add one SimpleOperation
+                    processed_operations.add(id(op1))
+                    processed_operations.add(id(op2))
+
+                    # Add the income operation only (the positive one)
+                    income_op = op2 if op2.amount > 0 else op1
+                    simple_op = SimpleOperation.from_raw(income_op)
+                    operations.append(simple_op)
+                    break
+                elif (
                     op1.currency != op2.currency
                     and (
                         (op1.amount < 0 and op2.amount > 0)
@@ -69,6 +90,7 @@ def prepare_operations(
                     )
                     and (_is_currency_exchange(op1) or _is_currency_exchange(op2))
                 ):
+                    # Currency exchange case
                     if op1.amount < 0:
                         from_op, to_op = op1, op2
                     else:

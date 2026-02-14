@@ -1,0 +1,225 @@
+# Project Metadata for AI Agents
+# This file provides structured, easily parseable project information
+
+project:
+  name: "raiffeisen-to-zenmoney"
+  version: "0.1.0"
+  description: "Automated tool to sync Raiffeisen bank transactions from email to ZenMoney financial tracking service"
+  type: "automation-tool"
+  status: "active"
+
+language:
+  primary: "Python"
+  version: "3.13+"
+
+architecture:
+  pattern: "pipeline"
+  style: "procedural-with-dataclasses"
+  entry_point: "src/main.py"
+
+tech_stack:
+  runtime: "Python 3.13"
+  package_manager: "uv"
+
+  core_dependencies:
+    - name: "imapclient"
+      version: ">=3.0.1"
+      purpose: "Email fetching via IMAP"
+
+    - name: "lxml"
+      version: ">=6.0.2"
+      purpose: "XML parsing for bank statements"
+
+    - name: "pydantic"
+      version: ">=2.12.5"
+      purpose: "Data validation and modeling"
+
+    - name: "requests"
+      version: ">=2.32.5"
+      purpose: "HTTP requests to ZenMoney API"
+
+    - name: "pyyaml"
+      version: ">=6.0"
+      purpose: "Configuration file parsing"
+
+    - name: "mail-parser"
+      version: ">=4.1.4"
+      purpose: "Email message parsing"
+
+  dev_dependencies:
+    - "pytest"
+    - "black"
+    - "ruff"
+
+integrations:
+  - name: "Gmail IMAP"
+    type: "email-provider"
+    auth: "app-specific-password"
+
+  - name: "ZenMoney API"
+    type: "financial-tracking"
+    version: "v8"
+    endpoint: "https://api.zenmoney.ru/v8/diff/"
+    auth: "bearer-token"
+
+  - name: "Raiffeisen Bank Serbia"
+    type: "bank-statements"
+    format: "XML-attachment"
+
+data_flow:
+  steps:
+    - "Fetch emails via IMAP"
+    - "Extract XML attachments"
+    - "Parse XML to RawOperation"
+    - "Link related operations"
+    - "Categorize transactions"
+    - "Filter duplicates"
+    - "Sync to ZenMoney API"
+
+modules:
+  - name: "config"
+    path: "src/config.py"
+    purpose: "YAML configuration loader"
+    exports: ["Config", "get_config"]
+
+  - name: "envs"
+    path: "src/envs.py"
+    purpose: "Legacy environment configuration bridge"
+
+  - name: "main"
+    path: "src/main.py"
+    purpose: "Application entry point and orchestration"
+
+  - name: "emails_statements"
+    path: "src/services/emails_statements/"
+    purpose: "Email fetching and XML parsing"
+    key_files:
+      - "getter.py: IMAP client and statement fetching"
+      - "statement.py: XML parsing and data models"
+
+  - name: "operations"
+    path: "src/services/operations/"
+    purpose: "Transaction processing and categorization"
+    key_files:
+      - "operations.py: Operation data models"
+      - "preparer.py: Link operations and categorize"
+      - "filter.py: Duplicate detection"
+
+  - name: "zen_money"
+    path: "src/services/zen_money/"
+    purpose: "ZenMoney API integration"
+    key_files:
+      - "zen_money_api.py: API client and models"
+      - "preparer.py: Convert operations to API format"
+
+transaction_types:
+  - name: "SimpleOperation"
+    description: "Regular income or expense transaction"
+    fields: ["customer", "amount", "currency", "date"]
+
+  - name: "TransitionOperation"
+    description: "Currency exchange (linked buy/sell operations)"
+    fields: ["from_amount", "from_currency", "to_amount", "to_currency", "date"]
+
+  - name: "DeelTransferOperation"
+    description: "Incoming transfer from Deel platform"
+    fields: ["customer", "amount", "currency", "date"]
+    special: "Mapped to transfer between Deel account and bank account"
+
+configuration:
+  file: "config.yaml"
+  format: "YAML"
+  template: "config.sample.yaml"
+  sections:
+    - "email: IMAP credentials and filters"
+    - "zen_money: API key and user ID"
+    - "currency_config: Account and instrument mappings"
+    - "category_config: Merchant to category mappings"
+    - "deel_config: Deel transfer detection settings"
+
+key_algorithms:
+  - name: "Operation Linking"
+    description: "Links related operations by reference number or description"
+    location: "src/services/operations/preparer.py:_are_operations_linked"
+
+  - name: "Currency Exchange Detection"
+    description: "Identifies currency conversion operations"
+    location: "src/services/operations/preparer.py:_is_currency_exchange"
+    keywords: ["otkup", "kupoprodaja deviza", "protivvrednost"]
+
+  - name: "Deel Transfer Detection"
+    description: "Identifies incoming Deel payments"
+    location: "src/services/operations/preparer.py:_is_deel_transfer"
+    criteria: ["positive amount", "keyword match", "enabled in config"]
+
+  - name: "Duplicate Detection"
+    description: "Filters already imported transactions"
+    location: "src/services/operations/filter.py"
+    matching: ["same date", "same amount", "same payee"]
+
+data_models:
+  - name: "RawOperation"
+    purpose: "Parsed XML transaction data"
+    format: "Pydantic BaseModel"
+
+  - name: "Statement"
+    purpose: "Bank statement with operations"
+    format: "Pydantic BaseModel"
+
+  - name: "ZenMoneyState"
+    purpose: "Current state from ZenMoney API"
+    format: "Pydantic BaseModel"
+    includes: ["accounts", "transactions", "instruments", "budgets"]
+
+  - name: "NewZenMoneyState"
+    purpose: "Updates to send to ZenMoney API"
+    format: "Pydantic BaseModel"
+
+  - name: "Transaction"
+    purpose: "ZenMoney transaction format"
+    format: "Pydantic BaseModel"
+
+common_patterns:
+  config_access: "from config import get_config; config = get_config()"
+  dataclass_creation: "Use @dataclass with from_raw classmethod"
+  api_models: "Use Pydantic BaseModel with Optional fields"
+  error_handling: "Raise exceptions with descriptive messages"
+
+development:
+  setup: "uv sync"
+  run: "python src/main.py"
+  format: "black src/"
+  lint: "ruff check src/"
+  test: "pytest"
+
+deployment:
+  method: "Docker"
+  dockerfile: "Dockerfile"
+  config_required: true
+  secrets: ["email credentials", "ZenMoney API key"]
+
+security:
+  - "Never commit config.yaml"
+  - "Use app-specific passwords for Gmail"
+  - "Store API keys only in config file"
+  - "No credentials in code"
+
+limitations:
+  - "Only supports Raiffeisen Bank Serbia email format"
+  - "Requires specific XML schema"
+  - "Limited to configured currencies (USD, RSD)"
+  - "ZenMoney API rate limits apply"
+  - "IMAP connection depends on Gmail availability"
+
+extension_points:
+  - "Add new operation types in operations.py"
+  - "Add new categorization rules in preparer.py"
+  - "Support additional currencies in config"
+  - "Add new email sources in getter.py"
+  - "Custom duplicate detection logic in filter.py"
+
+metadata:
+  created: "2024"
+  documentation_version: "1.0"
+  maintained_for: ["Claude", "GPT", "AI coding assistants"]
+  last_updated: "2024"

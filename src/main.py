@@ -8,12 +8,21 @@ from services.operations.operations import (
     TransitionOperation,
 )
 from services.operations.preparer import prepare_operations
+from services.zen_money.auto_cleanup import auto_cleanup_duplicates
 from services.zen_money.preparer import prepare_new_state
 from services.zen_money.zen_money_api import get_state, update_state
 
 
 def main():
     DAYS = 7
+
+    # Auto-cleanup duplicates before processing
+    print("Проверка и удаление дубликатов...")
+    cleanup_result = auto_cleanup_duplicates(DAYS)
+    if cleanup_result:
+        print("✅ Дубликаты удалены")
+    else:
+        print("✅ Дубликатов не найдено")
 
     statements = get_statements(DAYS)
     print(f"Получено выписок: {len(statements)}")
