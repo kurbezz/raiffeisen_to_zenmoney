@@ -40,7 +40,8 @@ def find_duplicate_transactions(
         Dictionary with duplicate groups:
         {
             'sms': {key: [transactions]},  # SMS duplicates
-            'import': {key: [transactions]}  # Import duplicates
+            'import': {key: [transactions]},  # Import duplicates
+            'cross_type': [transactions_to_delete]  # SMS+Import cross-type pairs
         }
     """
     # Get Raiffeisen accounts
@@ -52,6 +53,7 @@ def find_duplicate_transactions(
 
     sms_groups = {}
     import_groups = {}
+    cross_type_duplicates = []
 
     for transaction in zen_money_state.transaction:
         if transaction.deleted:
@@ -105,6 +107,41 @@ def find_duplicate_transactions(
 
             sms_groups[key].append(transaction)
 
+    # Find cross-type duplicates (SMS + Import with same date, amount, currency)
+    for sms_transactions in sms_groups.values():
+        for sms_tx in sms_transactions:
+            sms_amount = sms_tx.outcome if sms_tx.outcome > 0 else sms_tx.income
+            sms_currency_id = (
+                sms_tx.outcomeInstrument
+                if sms_tx.outcome > 0
+                else sms_tx.incomeInstrument
+            )
+            sms_currency = instruments.get(sms_currency_id)
+            sms_currency_str = (
+                sms_currency.shortTitle if sms_currency else str(sms_currency_id)
+            )
+
+            # Look for import transactions with same date, amount, currency
+            for import_transactions in import_groups.values():
+                for import_tx in import_transactions:
+                    import_currency = instruments.get(import_tx.outcomeInstrument)
+                    import_currency_str = (
+                        import_currency.shortTitle
+                        if import_currency
+                        else str(import_tx.outcomeInstrument)
+                    )
+                    
+                    # Check if this could be the same transaction
+                    if (
+                        sms_tx.date == import_tx.date
+                        and abs(sms_amount) == abs(import_tx.outcome)
+                        and sms_currency_str == import_currency_str
+                    ):
+                        # This is a cross-type duplicate
+                        # Keep the import version (more detailed), delete SMS version
+                        if sms_tx not in cross_type_duplicates:
+                            cross_type_duplicates.append(sms_tx)
+
     # Filter to keep only actual duplicates
     sms_duplicates = {k: v for k, v in sms_groups.items() if len(v) > 1}
     import_duplicates = {k: v for k, v in import_groups.items() if len(v) > 1}
@@ -112,6 +149,7 @@ def find_duplicate_transactions(
     return {
         "sms": sms_duplicates,
         "import": import_duplicates,
+        "cross_type": cross_type_duplicates,
     }
 
 
@@ -119,7 +157,10 @@ def select_transactions_to_delete(duplicates: dict) -> list:
     """
     Select transactions to delete from duplicate groups.
 
-    Strategy: Keep the newest (by created time), delete older ones.
+    Strategy: 
+    - Keep the newest (by created time) for SMS duplicates
+    - Keep the newest (by created time) for import duplicates
+    - Delete SMS version for cross-type duplicates (keep import)
 
     Returns:
         List of Transaction objects to delete
@@ -137,6 +178,9 @@ def select_transactions_to_delete(duplicates: dict) -> list:
         sorted_txs = sorted(transactions, key=lambda t: t.created)
         # Delete all but the newest
         to_delete.extend(sorted_txs[:-1])
+
+    # Process cross-type duplicates (delete SMS, keep import)
+    to_delete.extend(duplicates["cross_type"])
 
     return to_delete
 
@@ -157,10 +201,24 @@ def auto_cleanup_duplicates(days: int = 90) -> bool:
     # Find duplicates
     duplicates = find_duplicate_transactions(zen_money_state)
 
-    total_duplicates = len(duplicates["sms"]) + len(duplicates["import"])
+    total_duplicates = (
+        len(duplicates["sms"])
+        + len(duplicates["import"])
+        + len(duplicates["cross_type"])
+    )
 
     if total_duplicates == 0:
         return False
+
+    # Print summary of what was found
+    if duplicates["cross_type"]:
+        print(
+            f"⚠️ Найдено {len(duplicates['cross_type'])} кросс-типных дубликатов (SMS + Import)"
+        )
+        for tx in duplicates["cross_type"]:
+            print(
+                f"   - Дата: {tx.date}, Сумма: {tx.income if tx.income > 0 else tx.outcome}, Payee: {tx.payee}"
+            )
 
     # Select which transactions to delete
     to_delete = select_transactions_to_delete(duplicates)
