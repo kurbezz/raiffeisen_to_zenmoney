@@ -124,17 +124,26 @@ def find_duplicate_transactions(
             # Look for import transactions with same date, amount, currency
             for import_transactions in import_groups.values():
                 for import_tx in import_transactions:
-                    import_currency = instruments.get(import_tx.outcomeInstrument)
+                    # Determine amount and currency for import transaction
+                    import_amount = (
+                        import_tx.outcome if import_tx.outcome > 0 else import_tx.income
+                    )
+                    import_currency_id = (
+                        import_tx.outcomeInstrument
+                        if import_tx.outcome > 0
+                        else import_tx.incomeInstrument
+                    )
+                    import_currency = instruments.get(import_currency_id)
                     import_currency_str = (
                         import_currency.shortTitle
                         if import_currency
-                        else str(import_tx.outcomeInstrument)
+                        else str(import_currency_id)
                     )
                     
                     # Check if this could be the same transaction
                     if (
                         sms_tx.date == import_tx.date
-                        and abs(sms_amount) == abs(import_tx.outcome)
+                        and abs(sms_amount) == abs(import_amount)
                         and sms_currency_str == import_currency_str
                     ):
                         # This is a cross-type duplicate
