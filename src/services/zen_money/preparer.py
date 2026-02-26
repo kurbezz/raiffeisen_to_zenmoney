@@ -74,6 +74,12 @@ def _create_simple_transaction(
 
     categories = _get_category_for_payee(operation.customer)
 
+    # Add reference to comment if available
+    if operation.reference:
+        comment = f"Импорт: {operation.customer} ({operation.currency}) [Ref: {operation.reference}]"
+    else:
+        comment = f"Импорт: {operation.customer} ({operation.currency})"
+
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
@@ -89,7 +95,7 @@ def _create_simple_transaction(
         incomeAccount=bank_account_id if is_income else cash_account_id,
         outcomeAccount=cash_account_id if is_income else bank_account_id,
         payee=operation.customer,
-        comment=f"Импорт: {operation.customer} ({operation.currency})",
+        comment=comment,
         tag=categories,
         merchant=None,
     )
@@ -103,6 +109,18 @@ def _create_transition_transaction(
 
     from_config = CURRENCY_CONFIG.get(operation.from_currency, CURRENCY_CONFIG["RSD"])
     to_config = CURRENCY_CONFIG.get(operation.to_currency, CURRENCY_CONFIG["RSD"])
+
+    # Build comment with references if available
+    base_comment = f"Обмен валют: {operation.from_amount} {operation.from_currency} → {operation.to_amount} {operation.to_currency}"
+    if operation.from_reference or operation.to_reference:
+        refs = []
+        if operation.from_reference:
+            refs.append(operation.from_reference)
+        if operation.to_reference:
+            refs.append(operation.to_reference)
+        comment = f"{base_comment} [Refs: {','.join(refs)}]"
+    else:
+        comment = base_comment
 
     return Transaction(
         id=str(uuid.uuid4()),
@@ -118,7 +136,7 @@ def _create_transition_transaction(
         viewed=False,
         incomeAccount=to_config["account_id"],
         outcomeAccount=from_config["account_id"],
-        comment=f"Обмен валют: {operation.from_amount} {operation.from_currency} → {operation.to_amount} {operation.to_currency}",
+        comment=comment,
         tag=[],
         merchant=None,
     )
@@ -140,6 +158,12 @@ def _create_deel_transfer_transaction(
     deel_currency = DEEL_CONFIG.get("currency", "USD")
     deel_currency_config = CURRENCY_CONFIG.get(deel_currency, CURRENCY_CONFIG["USD"])
 
+    # Add reference to comment if available
+    if operation.reference:
+        comment = f"Transfer from Deel: {operation.customer} [Ref: {operation.reference}]"
+    else:
+        comment = f"Transfer from Deel: {operation.customer}"
+
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
@@ -155,7 +179,7 @@ def _create_deel_transfer_transaction(
         incomeAccount=bank_currency_config["account_id"],
         outcomeAccount=deel_account_id,
         payee=operation.customer,
-        comment=f"Transfer from Deel: {operation.customer}",
+        comment=comment,
         tag=[],
         merchant=None,
     )
@@ -176,6 +200,12 @@ def _create_cash_withdrawal_transaction(
     bank_account_id = currency_config["account_id"]
     cash_account_id = currency_config.get("cash_account_id", bank_account_id)
 
+    # Add reference to comment if available
+    if operation.reference:
+        comment = f"Снятие наличных: {operation.customer} [Ref: {operation.reference}]"
+    else:
+        comment = f"Снятие наличных: {operation.customer}"
+
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
@@ -191,7 +221,7 @@ def _create_cash_withdrawal_transaction(
         incomeAccount=cash_account_id,
         outcomeAccount=bank_account_id,
         payee=operation.customer,
-        comment=f"Снятие наличных: {operation.customer}",
+        comment=comment,
         tag=[],
         merchant=None,
     )

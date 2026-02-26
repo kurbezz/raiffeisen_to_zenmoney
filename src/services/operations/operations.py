@@ -10,6 +10,7 @@ class SimpleOperation:
     amount: float
     currency: str
     date: str
+    reference: str = ""
 
     @classmethod
     def from_raw(cls, raw_operation: RawOperation) -> Self:
@@ -18,6 +19,7 @@ class SimpleOperation:
             amount=raw_operation.amount,
             currency=raw_operation.currency,
             date=raw_operation.data,
+            reference=raw_operation.reference,
         )
 
 
@@ -30,6 +32,8 @@ class TransitionOperation:
     to_currency: str
 
     date: str
+    from_reference: str = ""
+    to_reference: str = ""
 
     @classmethod
     def from_raw(cls, from_operation: RawOperation, to_operation: RawOperation) -> Self:
@@ -39,6 +43,8 @@ class TransitionOperation:
             to_amount=to_operation.amount,
             to_currency=to_operation.currency,
             date=from_operation.data,
+            from_reference=from_operation.reference,
+            to_reference=to_operation.reference,
         )
 
 
@@ -50,6 +56,7 @@ class DeelTransferOperation:
     amount: float
     currency: str
     date: str
+    reference: str = ""
 
     @classmethod
     def from_raw(cls, raw_operation: RawOperation) -> Self:
@@ -58,6 +65,7 @@ class DeelTransferOperation:
             amount=raw_operation.amount,
             currency=raw_operation.currency,
             date=raw_operation.data,
+            reference=raw_operation.reference,
         )
 
 
@@ -69,6 +77,7 @@ class CashWithdrawalOperation:
     amount: float
     currency: str
     date: str
+    reference: str = ""
 
     @classmethod
     def from_raw(cls, raw_operation: RawOperation) -> Self:
@@ -77,4 +86,5 @@ class CashWithdrawalOperation:
             amount=raw_operation.amount,
             currency=raw_operation.currency,
             date=raw_operation.data,
+            reference=raw_operation.reference,
         )
