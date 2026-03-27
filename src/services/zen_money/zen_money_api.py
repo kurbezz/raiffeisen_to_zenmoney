@@ -140,7 +140,7 @@ class ZenMoneyState(BaseModel):
     account: List[Account]
     budget: Optional[List[Budget]] = None
     reminder: Optional[List[Reminder]] = None
-    reminderMarker: List[ReminderMarker]
+    reminderMarker: Optional[List[ReminderMarker]] = None
     transaction: List[Transaction]
 
 

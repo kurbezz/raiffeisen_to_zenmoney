@@ -1,3 +1,5 @@
+import re
+
 from services.emails_statements.statement import RawOperation, Statement
 from services.operations.operations import (
     CashWithdrawalOperation,
@@ -105,6 +107,13 @@ def prepare_operations(
 
     for raw_operation, account_number in all_raw_operations:
         if id(raw_operation) not in processed_operations:
+            # Проверяем однонаправленный обмен валюты по тексту выписки
+            single_exchange = _parse_single_currency_exchange(raw_operation)
+            if single_exchange:
+                operations.append(single_exchange)
+                processed_operations.add(id(raw_operation))
+                continue
+
             # Проверяем, является ли это переводом от Deel
             if deel_config and _is_deel_transfer(raw_operation, deel_config):
                 deel_op = DeelTransferOperation.from_raw(raw_operation)
@@ -157,6 +166,44 @@ def _is_currency_exchange(operation: RawOperation) -> bool:
     return (
         any(keyword in description_lower for keyword in exchange_keywords)
         or "raiffeisen banka" in customer_lower
+    )
+
+
+def _parse_single_currency_exchange(
+    operation: RawOperation,
+) -> TransitionOperation | None:
+    """Parse single-leg currency exchange operations from statement text.
+
+    Handles descriptions like:
+    - "Isplata dinarske protivvrednosti po otkupu USD 1.000,00 ..."
+    - "Uplata dinarske protivvrednosti po prodaji EUR 500,00 ..."
+    """
+
+    description_lower = operation.description.lower()
+    if "dinarske protivvrednosti" not in description_lower:
+        return None
+
+    match = re.search(
+        r"(?:otkupu|prodaji)\s+([A-Z]{3})\s+([\d.]+,\d{2})",
+        operation.description,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+
+    source_currency = match.group(1).upper()
+    source_amount = float(match.group(2).replace(".", "").replace(",", "."))
+
+    if source_currency == operation.currency:
+        return None
+
+    return TransitionOperation(
+        from_amount=-source_amount,
+        from_currency=source_currency,
+        to_amount=operation.amount,
+        to_currency=operation.currency,
+        date=operation.data,
+        to_reference=operation.reference,
     )
 
 
