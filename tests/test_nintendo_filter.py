@@ -1,8 +1,5 @@
 """Unit tests for Nintendo transaction filtering logic used in fix_nintendo_category."""
 
-import pytest
-
-
 GAMES_UUID = "games-uuid-1234"
 RAIFFEISEN_ACCOUNT_ID = "raiff-account-uuid"
 OTHER_ACCOUNT_ID = "other-account-uuid"
