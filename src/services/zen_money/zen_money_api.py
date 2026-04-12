@@ -134,6 +134,22 @@ class Transaction(BaseModel):
     reminderMarker: Optional[str] = None
 
 
+class Tag(BaseModel):
+    id: str
+    user: int
+    title: str
+    changed: int
+    icon: Optional[str] = None
+    budgetOutcome: Optional[bool] = None
+    budgetIncome: Optional[bool] = None
+    required: Optional[bool] = None
+    color: Optional[int] = None
+    picture: Optional[str] = None
+    showIncome: Optional[bool] = None
+    showOutcome: Optional[bool] = None
+    parent: Optional[str] = None
+
+
 class ZenMoneyState(BaseModel):
     serverTimestamp: int
     instrument: List[Instrument]
@@ -142,6 +158,7 @@ class ZenMoneyState(BaseModel):
     reminder: Optional[List[Reminder]] = None
     reminderMarker: Optional[List[ReminderMarker]] = None
     transaction: List[Transaction]
+    tag: Optional[List[Tag]] = None
 
 
 class NewZenMoneyState(BaseModel):
