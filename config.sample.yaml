@@ -41,6 +41,7 @@ category_config:
   "Poreska Uprava": "00000000-0000-0000-0000-000000000000"
   "Novi Sad - Gas": "00000000-0000-0000-0000-000000000000"
   "JKP INFORMATIKA NOVI SAD": "00000000-0000-0000-0000-000000000000"
+  "Nintendo": "00000000-0000-0000-0000-000000000000"  # Games / Игры category
 
 # Deel account configuration for incoming transfers
 deel_config:
