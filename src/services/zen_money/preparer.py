@@ -42,9 +42,19 @@ def prepare_new_state(
 
     return NewZenMoneyState(
         currentClientTimestamp=current_timestamp,
-        serverTimestamp=0,
+        serverTimestamp=current_timestamp,
         transaction=transactions if transactions else None,
     )
+
+
+def _to_iso_date(date_str: str) -> str:
+    """Convert DD.MM.YYYY statement dates to YYYY-MM-DD expected by ZenMoney."""
+    try:
+        if "." in date_str:
+            return datetime.strptime(date_str, "%d.%m.%Y").strftime("%Y-%m-%d")
+        return date_str
+    except ValueError:
+        return date_str
 
 
 def _get_category_for_payee(payee: str) -> list[str]:
@@ -83,7 +93,7 @@ def _create_simple_transaction(
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
-        date=operation.date,
+        date=_to_iso_date(operation.date),
         income=abs_amount if is_income else 0.0,
         outcome=abs_amount if not is_income else 0.0,
         changed=current_timestamp,
@@ -125,7 +135,7 @@ def _create_transition_transaction(
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
-        date=operation.date,
+        date=_to_iso_date(operation.date),
         income=to_amount,
         outcome=from_amount,
         changed=current_timestamp,
@@ -167,7 +177,7 @@ def _create_deel_transfer_transaction(
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
-        date=operation.date,
+        date=_to_iso_date(operation.date),
         income=abs_amount,
         outcome=abs_amount,
         changed=current_timestamp,
@@ -209,7 +219,7 @@ def _create_cash_withdrawal_transaction(
     return Transaction(
         id=str(uuid.uuid4()),
         user=USER_ID,
-        date=operation.date,
+        date=_to_iso_date(operation.date),
         income=abs_amount,
         outcome=abs_amount,
         changed=current_timestamp,
